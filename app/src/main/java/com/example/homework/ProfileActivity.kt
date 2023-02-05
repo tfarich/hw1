@@ -65,36 +65,34 @@ fun ProfilePage() {
         notification.value = ""
     }
 
-    var name by rememberSaveable { mutableStateOf("admin") }
+    var name by rememberSaveable { mutableStateOf("Admin McAdmin") }
     var username by rememberSaveable { mutableStateOf("admin") }
-    var bio by rememberSaveable { mutableStateOf("this is your bio") }
+    var bio by rememberSaveable { mutableStateOf("This is your bio.") }
 
     Column(
         modifier = Modifier
-            //.verticalScroll(rememberScrollState())
-            //.padding(8.dp)
+            .verticalScroll(rememberScrollState())
+            .padding(8.dp)
     ) {
-        Row(
-            modifier = Modifier,
-                //.fillMaxWidth()
-                //.padding(8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(text = "Cancel",
-                modifier = Modifier.clickable { notification.value = "Cancelled" })
-            Text(text = "Save",
-                modifier = Modifier.clickable { notification.value = "Profile updated" })
-        }
-
-        ProfileImage()
 
         Row(
-            modifier = Modifier,
-                //.fillMaxWidth()
-                //.padding(start = 4.dp, end = 4.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 10.dp, end = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = "Name", modifier = Modifier.width(100.dp))
+            Text(text = "", color = black, modifier = Modifier.width(40.dp))
+
+            ProfileImage()
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 4.dp, end = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(text = "Name", color = black, modifier = Modifier.width(40.dp))
             TextField(
                 value = name,
                 onValueChange = { name = it },
@@ -106,12 +104,12 @@ fun ProfilePage() {
         }
 
         Row(
-            modifier = Modifier,
-                //.fillMaxWidth()
-                //.padding(start = 4.dp, end = 4.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 4.dp, end = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = "Username", modifier = Modifier.width(100.dp))
+            Text(text = "Username", color = black, modifier = Modifier.width(40.dp))
             TextField(
                 value = username,
                 onValueChange = { username = it },
@@ -123,14 +121,14 @@ fun ProfilePage() {
         }
 
         Row(
-            modifier = Modifier,
-                //.fillMaxWidth(),
-                //.padding(8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
             verticalAlignment = Alignment.Top
         ) {
             Text(
-                text = "Bio", modifier = Modifier
-                    .width(100.dp)
+                text = "Bio", color = black, modifier = Modifier
+                    .width(40.dp)
                     .padding(top = 8.dp)
             )
             TextField(
@@ -163,9 +161,9 @@ fun ProfileImage() {
     }
 
     Column(
-        modifier = Modifier,
-            //.padding(8.dp)
-            //.fillMaxWidth(),
+        modifier = Modifier
+            .padding(8.dp)
+            .fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Card(

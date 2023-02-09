@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -76,55 +77,61 @@ fun BottomBar() {
     }
 }
 
-/**@Composable
-fun RecyclerViewImpl() {
-    val list = mutableListOf<String>()
-    for (i in 1..5) {
-        list.add("Placeholder $i")
-    }
-    LazyColumn {
-        items(list) { it ->
-            Card(modifier = Modifier.padding(8.dp)) {
-                Column(
-                    modifier = Modifier
-                        .padding(8.dp)
-                        .fillMaxWidth()
-                ) {
-                    Text(text = it, modifier = Modifier.padding(8.dp))
-                }
-            }
-        }
-    }
- }**/
-
 @Composable
 fun RecyclerViewImpl(context: Context) {
     var data: MutableList<Reminder>
-    val db :DatabaseHandler = DatabaseHandler(context)
-    var list2 = ArrayList<String>()
+    val db: DatabaseHandler = DatabaseHandler(context)
+    //var list2 = ArrayList<String>()
     data = db.readData()!!
-    Log.d("V", data.toString())
+    //Log.d("V", data.toString())
     if (data.isEmpty()) {
-        list2.add("Press Add Reminder to Add Your First Reminder")
-    } else if (data.size == 1) {
-        list2.add(data[0].messageToString())
-    } else {
-        for (i in 0 until data.size) {
-            list2.add(data[i].messageToString())
-        }
-    }
-    LazyColumn {
-        items(list2) { it ->
-            Card(modifier = Modifier.padding(8.dp)) {
-                Column(
-                    modifier = Modifier
-                        .padding(8.dp)
-                        .fillMaxWidth()
-                ) {
-                    Text(text = it, modifier = Modifier.padding(8.dp))
+        LazyColumn {
+            var list = ArrayList<String>()
+            list.add("Press Add Reminder to Add Your First Reminder")
+            items(list) { it ->
+                Card(modifier = Modifier.padding(8.dp)) {
+                    Column(
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .fillMaxWidth()
+                    ) {
+                        Text(text = it, modifier = Modifier.padding(8.dp))
+                    }
                 }
-                
+            }
+        }
+    } else {
+        LazyColumn {
+            items(data) { it ->
+                Card(modifier = Modifier.padding(8.dp)) {
+                    Column(
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .fillMaxWidth()
+                    ) {
+                        Row() {
+                            Text(text = it.messageToString(),
+                                modifier = Modifier.padding(8.dp))
+                            Spacer(Modifier.weight(1f))
+                            Button(border = null, colors = ButtonDefaults.buttonColors(
+                                backgroundColor = Color.White,
+                                contentColor = Color.Black), onClick = { editItem(it.id) },) {
+                                Icon(imageVector = Icons.Default.Edit, "", tint = black)
+                            }
+                            Button(colors = ButtonDefaults.buttonColors(
+                                backgroundColor = Color.White,
+                                contentColor = Color.Black), onClick = {  }) {
+                                Icon(imageVector = Icons.Default.Delete, "", tint = black)
+                            }
+                        }
+                    }
+                }
             }
         }
     }
+}
+
+fun editItem(id: Int) {
+    print(id)
+    // trun this int oa view
 }

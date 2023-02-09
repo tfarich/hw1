@@ -1,8 +1,10 @@
 package com.example.homework
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
@@ -19,7 +21,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 
-
 class MainActivity : ComponentActivity() {
     @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,7 +33,7 @@ class MainActivity : ComponentActivity() {
                 content = {
                     ComposePlaygroundTheme {
                         Surface(color = LightBlue) {
-                            RecyclerViewImpl()
+                            RecyclerViewImpl(LocalContext.current)
                         }
                     }
                 },
@@ -62,7 +63,7 @@ fun BottomBar() {
             label = { Text(text = "Add Reminder") },
             selected = (selectedIndex.value == 1),
             onClick = {
-                selectedIndex.value = 0
+                context.startActivity(Intent(context, AddActivity::class.java))
             })
         BottomNavigationItem(icon = {
             Icon(imageVector = Icons.Default.Person, "")
@@ -75,7 +76,7 @@ fun BottomBar() {
     }
 }
 
-@Composable
+/**@Composable
 fun RecyclerViewImpl() {
     val list = mutableListOf<String>()
     for (i in 1..5) {
@@ -91,6 +92,38 @@ fun RecyclerViewImpl() {
                 ) {
                     Text(text = it, modifier = Modifier.padding(8.dp))
                 }
+            }
+        }
+    }
+ }**/
+
+@Composable
+fun RecyclerViewImpl(context: Context) {
+    var data: MutableList<Reminder>
+    val db :DatabaseHandler = DatabaseHandler(context)
+    var list2 = ArrayList<String>()
+    data = db.readData()!!
+    Log.d("V", data.toString())
+    if (data.isEmpty()) {
+        list2.add("Press Add Reminder to Add Your First Reminder")
+    } else if (data.size == 1) {
+        list2.add(data[0].messageToString())
+    } else {
+        for (i in 0 until data.size) {
+            list2.add(data[i].messageToString())
+        }
+    }
+    LazyColumn {
+        items(list2) { it ->
+            Card(modifier = Modifier.padding(8.dp)) {
+                Column(
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .fillMaxWidth()
+                ) {
+                    Text(text = it, modifier = Modifier.padding(8.dp))
+                }
+                
             }
         }
     }

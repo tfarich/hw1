@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    tools:context=".EditActivity">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/header"
+        android:text="Edit Reminder"
+        android:textColor="@color/black"
+        android:textSize="35dp"
+        android:layout_margin="10dp"
+        android:gravity="center"/>
+
+    <EditText
+        android:id="@+id/message"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/header"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginBottom="10dp"
+        android:background="#F3F3F3"
+        android:drawableLeft="@drawable/baseline_message_24"
+        android:drawablePadding="15dp"
+        android:hint="Message"
+        android:padding="10dp"
+        android:textColor="@color/black"
+        android:textColorHint="@color/black" />
+
+    <com.google.android.material.button.MaterialButton
+        android:layout_alignLeft="@id/message"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:layout_below="@id/message"
+        android:layout_alignParentRight="true"
+        android:backgroundTint="#3cd0c4"
+        android:id="@+id/gallerybtn"
+        android:text="gallery photo"
+        android:layout_margin="7dp"/>
+
+    <ImageView
+        android:id="@+id/preview"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:maxHeight="45dp"
+        android:maxWidth="45dp"
+        android:scaleType="fitXY"
+        android:layout_gravity="center"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/gallerybtn"></ImageView>
+
+    <TimePicker
+        android:id="@+id/timePicker"
+        android:layout_width="wrap_content"
+        android:layout_below="@id/preview"
+        android:maxHeight="500dp"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true"
+        android:timePickerMode="spinner"
+        />
+
+    <com.google.android.material.button.MaterialButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/locationbtn"
+        android:layout_below="@id/timePicker"
+        android:text="FIND LOCATION"
+        android:backgroundTint="#3cd0c4"
+        android:layout_centerHorizontal="true"
+        />
+
+    <com.google.android.material.button.MaterialButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/createbtn"
+        android:layout_below="@id/locationbtn"
+        android:text="CREATE REMINDER"
+        android:backgroundTint="@color/black"
+        android:layout_centerHorizontal="true"
+        android:layout_margin="5dp"
+        />
+
+</RelativeLayout>

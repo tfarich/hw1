@@ -27,6 +27,7 @@
         <activity android:name=".AccountActivity"></activity>
         <activity android:name=".AddReminderActivity"></activity>
         <activity android:name=".AddActivity"></activity>
+        <activity android:name=".EditActivity"></activity>
     </application>
 
 </manifest>

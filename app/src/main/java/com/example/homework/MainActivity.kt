@@ -4,23 +4,23 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
+import androidx.core.content.ContextCompat.startActivity
+
 
 class MainActivity : ComponentActivity() {
     @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
@@ -81,9 +81,49 @@ fun BottomBar() {
 fun RecyclerViewImpl(context: Context) {
     var data: MutableList<Reminder>
     val db: DatabaseHandler = DatabaseHandler(context)
-    //var list2 = ArrayList<String>()
+    val context = LocalContext.current
+    var dialogOpen by remember { mutableStateOf(false) }
+    var id = 0
+
+    if (dialogOpen) {
+        AlertDialog(
+            onDismissRequest = {
+                dialogOpen = false
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    dialogOpen = false
+                    db.deleteData(id)
+                }) {
+                    Text(text = "Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    dialogOpen = false
+                }) {
+                    Text(text = "Do not Delete")
+                }
+            },
+            title = {
+                Text(text = "Do You Wish to Delete this Reminder?")
+            },
+            text = {
+                Text(text = "This action cannot be undone")
+            },
+            modifier = Modifier // Set the width and padding
+                .fillMaxWidth()
+                .padding(32.dp),
+            shape = RoundedCornerShape(5.dp),
+            backgroundColor = Color.White,
+            properties = DialogProperties(
+                dismissOnBackPress = true,
+                dismissOnClickOutside = true
+            )
+        )
+    }
+
     data = db.readData()!!
-    //Log.d("V", data.toString())
     if (data.isEmpty()) {
         LazyColumn {
             var list = ArrayList<String>()
@@ -113,15 +153,40 @@ fun RecyclerViewImpl(context: Context) {
                             Text(text = it.messageToString(),
                                 modifier = Modifier.padding(8.dp))
                             Spacer(Modifier.weight(1f))
-                            Button(border = null, colors = ButtonDefaults.buttonColors(
-                                backgroundColor = Color.White,
-                                contentColor = Color.Black), onClick = { editItem(it.id) },) {
-                                Icon(imageVector = Icons.Default.Edit, "", tint = black)
+                            Button(
+                                border = null,
+                                colors = ButtonDefaults.buttonColors(
+                                    backgroundColor = Color.White,
+                                    contentColor = Color.Black
+                                ),
+                                contentPadding = PaddingValues(0.dp),
+                                modifier = Modifier.size(width = 40.dp, height = 35.dp),
+                                onClick = {
+                                    val switchActivityIntent = Intent(context, EditActivity::class.java)
+                                    switchActivityIntent.putExtra("ID", it.id)
+                                    switchActivityIntent.putExtra("message", it.message)
+                                    switchActivityIntent.putExtra("location_x", it.location_x)
+                                    switchActivityIntent.putExtra("location_y", it.location_y)
+                                    switchActivityIntent.putExtra("reminder_time", it.reminder_time)
+                                    switchActivityIntent.putExtra("creation_time", it.creation_time)
+                                    switchActivityIntent.putExtra("creator_id", it.creator_id)
+                                    switchActivityIntent.putExtra("reminder_seen", it.reminder_seen)
+                                    switchActivityIntent.putExtra("reminder_icon", it.reminder_icon)
+                                    context.startActivity(switchActivityIntent)
+                                },
+                            ) {
+                                Icon(imageVector = Icons.Default.Edit, "")
                             }
                             Button(colors = ButtonDefaults.buttonColors(
                                 backgroundColor = Color.White,
-                                contentColor = Color.Black), onClick = {  }) {
-                                Icon(imageVector = Icons.Default.Delete, "", tint = black)
+                                contentColor = Color.Black),
+                                contentPadding = PaddingValues(0.dp),
+                                modifier = Modifier.size(width = 40.dp,height = 35.dp),
+                                onClick = {
+                                    dialogOpen = true
+                                    id = it.id
+                                }) {
+                                Icon(imageVector = Icons.Default.Delete, "")
                             }
                         }
                     }
@@ -129,9 +194,4 @@ fun RecyclerViewImpl(context: Context) {
             }
         }
     }
-}
-
-fun editItem(id: Int) {
-    print(id)
-    // trun this int oa view
 }

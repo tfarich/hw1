@@ -72,4 +72,26 @@ class DatabaseHandler(var context: Context) : SQLiteOpenHelper(context,DATABASE_
         db.close()
         return list
     }
+
+    @SuppressLint("Range")
+    fun updateData(reminder: Reminder) {
+        val db = this.writableDatabase
+        var cv = ContentValues()
+        cv.put(COL_MESSAGE, reminder.message)
+        cv.put(COL_LOCATION_X, reminder.location_x)
+        cv.put(COL_LOCATION_Y, reminder.location_y)
+        cv.put(COL_REMINDER_TIME, reminder.reminder_time)
+        cv.put(COL_CREATION_TIME, reminder.creation_time)
+        cv.put(COL_CREATOR_ID, reminder.creator_id)
+        cv.put(COL_REMINDER_SEEN, reminder.reminder_seen)
+        cv.put(COL_REMINDER_ICON, reminder.reminder_icon)
+        db.update(TABLE_NAME, cv, "REMINDER_ID=?", arrayOf(reminder.id.toString()))
+        db.close()
+    }
+
+    fun deleteData(id: Int) {
+        val db = this.writableDatabase
+        db.delete(TABLE_NAME, "$REMINDER_ID=?", arrayOf(id.toString()))
+        db.close()
+    }
 }

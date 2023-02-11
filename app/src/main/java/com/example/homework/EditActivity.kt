@@ -1,24 +1,37 @@
 package com.example.homework
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
-import android.widget.TextView
-import android.widget.TimePicker
-import android.widget.Toast
+import android.util.Log
+import android.view.View
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat.startActivity
 import com.google.android.material.button.MaterialButton
+import java.io.File
 import java.util.*
 
+
 class EditActivity : AppCompatActivity() {
+
+    private lateinit var imageButton: Button
+    private lateinit var imageView: ImageView
+    private lateinit var imageUri: Uri
+
+    companion object {
+        val IMAGE_REQUEST_CODE = 100
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_edit)
 
         val message = findViewById<TextView>(R.id.message)
-        val galleryButton = findViewById<MaterialButton>(R.id.gallerybtn)
+        imageButton = findViewById<MaterialButton>(R.id.gallerybtn)
         val timePicker = findViewById<TimePicker>(R.id.timePicker)
         val locationButton = findViewById<MaterialButton>(R.id.locationbtn)
+        val imgView = findViewById<ImageView>(R.id.preview)
+
+        var reminder = Reminder(0, "",0, 0, 0, 0, 0, 0, "")
 
         val extras = intent.extras
         if (extras != null) {
@@ -30,6 +43,7 @@ class EditActivity : AppCompatActivity() {
             var reminder_seen = 0
             var creator_icon = ""
             id = extras.getInt("ID")
+            //Log.v("ID: ", id.toString())
             message2 = extras.getString("message").toString()
             location_x = extras.getInt("location_x")
             location_y = extras.getInt("location_y")
@@ -38,13 +52,14 @@ class EditActivity : AppCompatActivity() {
             creator_id = extras.getInt("creator_id")
             reminder_seen = extras.getInt("reminder_seen")
             creator_icon = extras.getString("reminder_icon").toString()
+            imgView.setImageURI(Uri.parse(creator_icon))
             message.setText(message2.toString(), TextView.BufferType.EDITABLE)
-            val reminder = Reminder(id, message2, location_x, location_y, reminder_time, creation_time, creator_id, reminder_seen, creator_icon)
+            val reminder2 = Reminder(id, message2, location_x, location_y, reminder_time, creation_time, creator_id, reminder_seen, creator_icon)
+            reminder = reminder2
             val db: DatabaseHandler = DatabaseHandler(this)
         }
 
         val createButton = findViewById<MaterialButton>(R.id.createbtn)
-        var reminder = Reminder(0, "",0, 0, 0, 0, 0, 0, "")
         val calendar: Calendar = Calendar.getInstance()
 
         createButton.setOnClickListener {
@@ -52,6 +67,7 @@ class EditActivity : AppCompatActivity() {
             calendar.set(Calendar.HOUR, timePicker.getCurrentHour())
             calendar.set(Calendar.MINUTE, timePicker.getCurrentMinute())
             reminder.reminder_time = calendar.getTimeInMillis()
+            reminder.reminder_icon = imageUri.toString()
 
             var context = this
             var db = DatabaseHandler(context)
@@ -60,9 +76,36 @@ class EditActivity : AppCompatActivity() {
             Toast.makeText(this, "REMINDER UPDATED", Toast.LENGTH_SHORT).show()
             switchActivities()
             }
+
+        val backButton = findViewById<MaterialButton>(R.id.backbtn)
+        backButton.setOnClickListener {
+            switchActivities()
+        }
+
         }
     private fun switchActivities() {
         val switchActivityIntent = Intent(this, MainActivity::class.java)
         startActivity(switchActivityIntent)
+    }
+
+    private fun imagePicker() {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
+        intent.type = "image/*"
+        startActivityForResult(intent, AddActivity.IMAGE_REQUEST_CODE)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == AddActivity.IMAGE_REQUEST_CODE && resultCode == RESULT_OK) {
+            val contentResolver = applicationContext.contentResolver
+            val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            if (data != null) {
+                imageUri = data.data!!
+            }
+            imageUri?.let { contentResolver.takePersistableUriPermission(it, takeFlags) }
+            //Log.v("alright", imageUri.toString())
+            imageView.setImageURI(data?.data)
+        }
     }
 }

@@ -47,10 +47,10 @@
 
     <ImageView
         android:id="@+id/preview"
-        android:layout_height="wrap_content"
-        android:layout_width="wrap_content"
-        android:maxHeight="45dp"
-        android:maxWidth="45dp"
+        android:layout_height="40dp"
+        android:layout_width="40dp"
+        android:maxHeight="40dp"
+        android:maxWidth="40dp"
         android:scaleType="fitXY"
         android:layout_gravity="center"
         android:layout_centerVertical="true"
@@ -83,10 +83,20 @@
         android:layout_height="wrap_content"
         android:id="@+id/createbtn"
         android:layout_below="@id/locationbtn"
-        android:text="CREATE REMINDER"
+        android:text="UPDATE REMINDER"
         android:backgroundTint="@color/black"
         android:layout_centerHorizontal="true"
         android:layout_margin="5dp"
         />
+
+    <com.google.android.material.button.MaterialButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/backbtn"
+        android:layout_below="@id/createbtn"
+        android:text="Back to Main Page"
+        android:layout_centerHorizontal="true"
+        android:textColor="@color/black"
+        android:background="?android:attr/selectableItemBackground"/>
 
 </RelativeLayout>

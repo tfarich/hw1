@@ -3,23 +3,30 @@ package com.example.homework
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
+import androidx.compose.material.MaterialTheme.colors
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role.Companion.Image
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat.startActivity
+import coil.compose.rememberImagePainter
 
 
 class MainActivity : ComponentActivity() {
@@ -83,7 +90,7 @@ fun RecyclerViewImpl(context: Context) {
     val db: DatabaseHandler = DatabaseHandler(context)
     val context = LocalContext.current
     var dialogOpen by remember { mutableStateOf(false) }
-    var id = 0
+    var id by remember { mutableStateOf(0) }
 
     if (dialogOpen) {
         AlertDialog(
@@ -91,15 +98,27 @@ fun RecyclerViewImpl(context: Context) {
                 dialogOpen = false
             },
             confirmButton = {
-                TextButton(onClick = {
-                    dialogOpen = false
-                    db.deleteData(id)
+                TextButton(
+                    colors = ButtonDefaults.buttonColors(
+                        backgroundColor = Color.White,
+                        contentColor = Color.Black
+                    ),
+                    onClick = {
+                        db.deleteData(id)
+                        Log.v("ID: ", id.toString())
+                        val switchActivityIntent = Intent(context, MainActivity::class.java)
+                        context.startActivity(switchActivityIntent)
                 }) {
                     Text(text = "Delete")
                 }
             },
             dismissButton = {
-                TextButton(onClick = {
+                TextButton(
+                    colors = ButtonDefaults.buttonColors(
+                        backgroundColor = Color.White,
+                        contentColor = Color.Black
+                    ),
+                    onClick = {
                     dialogOpen = false
                 }) {
                     Text(text = "Do not Delete")
@@ -150,6 +169,10 @@ fun RecyclerViewImpl(context: Context) {
                             .fillMaxWidth()
                     ) {
                         Row() {
+                            Image(
+                                painter = rememberImagePainter(Uri.parse(it.reminder_icon)),
+                                contentDescription = "icon",
+                            )
                             Text(text = it.messageToString(),
                                 modifier = Modifier.padding(8.dp))
                             Spacer(Modifier.weight(1f))
@@ -177,9 +200,11 @@ fun RecyclerViewImpl(context: Context) {
                             ) {
                                 Icon(imageVector = Icons.Default.Edit, "")
                             }
-                            Button(colors = ButtonDefaults.buttonColors(
-                                backgroundColor = Color.White,
-                                contentColor = Color.Black),
+                            Button(
+                                colors = ButtonDefaults.buttonColors(
+                                    backgroundColor = Color.White,
+                                    contentColor = Color.Black
+                                ),
                                 contentPadding = PaddingValues(0.dp),
                                 modifier = Modifier.size(width = 40.dp,height = 35.dp),
                                 onClick = {

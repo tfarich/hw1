@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.button.MaterialButton
 import java.io.File
 import java.util.*
+import kotlin.properties.Delegates
 
 
 class EditActivity : AppCompatActivity() {
@@ -17,6 +18,7 @@ class EditActivity : AppCompatActivity() {
     private lateinit var imageButton: Button
     private lateinit var imageView: ImageView
     private lateinit var imageUri: Uri
+    private var imageChanged by Delegates.notNull<Boolean>()
 
     companion object {
         val IMAGE_REQUEST_CODE = 100
@@ -30,6 +32,14 @@ class EditActivity : AppCompatActivity() {
         val timePicker = findViewById<TimePicker>(R.id.timePicker)
         val locationButton = findViewById<MaterialButton>(R.id.locationbtn)
         val imgView = findViewById<ImageView>(R.id.preview)
+        imageChanged = false
+
+        imageButton = findViewById<MaterialButton>(R.id.gallerybtn)
+        imageView = findViewById<ImageView>(R.id.preview)
+
+        imageButton.setOnClickListener {
+            imagePicker()
+        }
 
         var reminder = Reminder(0, "",0, 0, 0, 0, 0, 0, "")
 
@@ -67,7 +77,9 @@ class EditActivity : AppCompatActivity() {
             calendar.set(Calendar.HOUR, timePicker.getCurrentHour())
             calendar.set(Calendar.MINUTE, timePicker.getCurrentMinute())
             reminder.reminder_time = calendar.getTimeInMillis()
-            reminder.reminder_icon = imageUri.toString()
+            if (imageChanged) {
+                reminder.reminder_icon = imageUri.toString()
+            }
 
             var context = this
             var db = DatabaseHandler(context)
@@ -97,6 +109,7 @@ class EditActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == AddActivity.IMAGE_REQUEST_CODE && resultCode == RESULT_OK) {
+            imageChanged = true
             val contentResolver = applicationContext.contentResolver
             val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION or
                     Intent.FLAG_GRANT_WRITE_URI_PERMISSION

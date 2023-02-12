@@ -27,6 +27,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat.startActivity
 import coil.compose.rememberImagePainter
+import coil.*
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import java.io.File
 
 
 class MainActivity : ComponentActivity() {
@@ -169,10 +173,22 @@ fun RecyclerViewImpl(context: Context) {
                             .fillMaxWidth()
                     ) {
                         Row() {
-                            Image(
-                                painter = rememberImagePainter(Uri.parse(it.reminder_icon)),
-                                contentDescription = "icon",
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(it.reminder_icon)
+                                .build(),
+                            contentDescription = "icon",
+                            contentScale = ContentScale.Inside,
+                            modifier = Modifier.size(30.dp)
                             )
+                            /*val painter = rememberImagePainter(data = File(it.reminder_icon))
+                            Image(
+                                modifier = Modifier
+                                    .padding(5.dp),
+                                contentScale = ContentScale.FillHeight,
+                                painter = painter,
+                                contentDescription = "",
+                            )*/
                             Text(text = it.messageToString(),
                                 modifier = Modifier.padding(8.dp))
                             Spacer(Modifier.weight(1f))

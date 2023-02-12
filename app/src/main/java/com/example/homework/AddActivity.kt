@@ -5,11 +5,13 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
+import android.provider.CalendarContract
 import android.provider.MediaStore
 import android.util.Log
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.button.MaterialButton
+import com.google.firebase.database.FirebaseDatabase
 import java.io.ByteArrayOutputStream
 import java.util.*
 
@@ -39,6 +41,8 @@ class AddActivity : AppCompatActivity() {
             imagePicker()
         }
 
+        imageUri = Uri.parse("0")
+
         var preview = findViewById<ImageView>(R.id.preview)
 
         val imagePath = ""
@@ -58,15 +62,19 @@ class AddActivity : AppCompatActivity() {
                 calendar.set(Calendar.MINUTE, timePicker.getCurrentMinute())
                 reminder.reminder_time = calendar.getTimeInMillis()
                 reminder.creation_time = time
-                reminder.reminder_icon = imageUri.toString()
-                Log.v("Image:", imageUri.toString())
+                if (imageUri.toString() != "0") {
+                    reminder.reminder_icon = imageUri.toString()
+                    Log.v("Image:", imageUri.toString())
 
-                var context = this
-                var db = DatabaseHandler(context)
-                db.insertData(reminder)
+                    var context = this
+                    var db = DatabaseHandler(context)
+                    db.insertData(reminder)
 
-                Toast.makeText(this, "REMINDER CREATED", Toast.LENGTH_SHORT).show()
-                switchActivities()
+                    Toast.makeText(this, "REMINDER CREATED", Toast.LENGTH_SHORT).show()
+                    switchActivities()
+                } else {
+                    Toast.makeText(this, "MUST CHOOSE IMAGE", Toast.LENGTH_SHORT).show()
+                }
             }
         }
 

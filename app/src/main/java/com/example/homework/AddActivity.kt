@@ -1,19 +1,16 @@
 package com.example.homework
 
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
-import android.provider.CalendarContract
-import android.provider.MediaStore
 import android.util.Log
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.work.*
 import com.google.android.material.button.MaterialButton
-import com.google.firebase.database.FirebaseDatabase
-import java.io.ByteArrayOutputStream
+import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 
 class AddActivity : AppCompatActivity() {
@@ -32,7 +29,6 @@ class AddActivity : AppCompatActivity() {
         val message = findViewById<TextView>(R.id.message)
         val timePicker = findViewById<TimePicker>(R.id.timePicker)
         val locationButton = findViewById<MaterialButton>(R.id.locationbtn)
-        val time = System.currentTimeMillis()
 
         imageButton = findViewById<MaterialButton>(R.id.gallerybtn)
         imageView = findViewById<ImageView>(R.id.preview)
@@ -48,7 +44,7 @@ class AddActivity : AppCompatActivity() {
         val imagePath = ""
         val calendar: Calendar = Calendar.getInstance()
 
-        var reminder = Reminder(0, "",0, 0, 0, 0, 0, 0, "")
+        var reminder = Reminder(0, "",0, 0, "", "", 0, 0, "")
 
         // create reminder
         val createButton = findViewById<MaterialButton>(R.id.createbtn)
@@ -57,20 +53,39 @@ class AddActivity : AppCompatActivity() {
             if (message.text.isNullOrEmpty()) {
                 Toast.makeText(this, "MUST ADD MESSAGE", Toast.LENGTH_SHORT).show()
             } else {
+                val time = Calendar.getInstance()
                 reminder.message = message.text.toString()
-                calendar.set(Calendar.HOUR, timePicker.getCurrentHour())
-                calendar.set(Calendar.MINUTE, timePicker.getCurrentMinute())
-                reminder.reminder_time = calendar.getTimeInMillis()
-                reminder.creation_time = time
+                calendar.set(Calendar.HOUR_OF_DAY, timePicker.hour)
+                //Log.v("Hour being chosen", timePicker.hour.toString())
+                calendar.set(Calendar.MINUTE, timePicker.minute)
+                //Log.v("Minute being chosen", timePicker.minute.toString())
+                val calendarCurr = Calendar.getInstance()
+                calendar.set(Calendar.SECOND, 0)
+                reminder.reminder_time = calendar.timeInMillis.toString()
+
+                reminder.creation_time = time.timeInMillis.toString()
+                //val dateFormat = SimpleDateFormat("EEE MMM dd hh:mm:ss 'GMT'Z yyyy")
+                //Log.v("reminder_time", dateFormat.format(calendar.getTime()))
+                //Log.v("creation time", dateFormat.format(time.getTime()))
                 if (imageUri.toString() != "0") {
                     reminder.reminder_icon = imageUri.toString()
-                    Log.v("Image:", imageUri.toString())
+                    //Log.v("Image:", imageUri.toString())
 
                     var context = this
                     var db = DatabaseHandler(context)
+                    Log.v("THE REMINDER ADDED", reminder.toString())
                     db.insertData(reminder)
 
-                    Toast.makeText(this, "REMINDER CREATED", Toast.LENGTH_SHORT).show()
+                    val timeDiff = (calendar.timeInMillis/1000L)-(time.timeInMillis/1000L)
+                    //Log.v("Time difference", timeDiff.toString())
+                    val myWorkRequest = OneTimeWorkRequestBuilder<NotificationWorker>()
+                        .setInitialDelay(timeDiff, TimeUnit.SECONDS)
+                        .setInputData(workDataOf(
+                            "title" to "Reminder",
+                            "message" to message.text.toString()
+                        )).build()
+                    //WorkManager.getInstance(requireContext()).enqueue(myWorkRequest)
+                    WorkManager.getInstance(it.context).enqueue(myWorkRequest)
                     switchActivities()
                 } else {
                     Toast.makeText(this, "MUST CHOOSE IMAGE", Toast.LENGTH_SHORT).show()

@@ -31,11 +31,14 @@ import coil.*
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import java.io.File
+import java.util.*
+import kotlin.collections.ArrayList
 
 
 class MainActivity : ComponentActivity() {
     @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
+        //this.deleteDatabase(DATABASE_NAME)
         super.onCreate(savedInstanceState)
         setContent {
             val scaffoldState = rememberScaffoldState(
@@ -147,10 +150,25 @@ fun RecyclerViewImpl(context: Context) {
     }
 
     data = db.readData()!!
-    if (data.isEmpty()) {
+    var reminderData: MutableList<Reminder> = mutableListOf()
+
+    for (d in data) {
+        val currentTime = Calendar.getInstance().timeInMillis
+        val reminderTime = d.reminder_time.toLong()
+        val id = d.id
+        Log.v("id", id.toString())
+        val timeDiff = (reminderTime/1000L)-(currentTime/1000L)
+        Log.v("reminder diff", timeDiff.toString())
+        Log.v("reminder_time", reminderTime.toString())
+        Log.v("creation time", currentTime.toString())
+        if (timeDiff < 0) {
+            reminderData.add(d)
+        }
+    }
+    if (reminderData.isEmpty()) {
         LazyColumn {
             var list = ArrayList<String>()
-            list.add("Press Add Reminder to Add Your First Reminder")
+            list.add("No Current Reminders")
             items(list) { it ->
                 Card(modifier = Modifier.padding(8.dp)) {
                     Column(
@@ -165,7 +183,7 @@ fun RecyclerViewImpl(context: Context) {
         }
     } else {
         LazyColumn {
-            items(data) { it ->
+            items(reminderData) { it ->
                 Card(modifier = Modifier.padding(8.dp)) {
                     Column(
                         modifier = Modifier

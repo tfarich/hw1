@@ -6,6 +6,7 @@ import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.media.Image
+import android.util.Log
 import android.widget.Toast
 import java.sql.Timestamp
 
@@ -24,7 +25,7 @@ val COL_REMINDER_ICON = "icon" // path
 class DatabaseHandler(var context: Context) : SQLiteOpenHelper(context,DATABASE_NAME,null,1) {
 
     override fun onCreate(db: SQLiteDatabase?) {
-        val createTable = "CREATE TABLE " + TABLE_NAME + " (" + REMINDER_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," + COL_LOCATION_X + " INTEGER," + COL_LOCATION_Y + " INTEGER," + COL_REMINDER_TIME + " INTEGER," + COL_CREATION_TIME + " INTEGER," + COL_CREATOR_ID + " INTEGER," + COL_REMINDER_SEEN + " INTEGER," + COL_MESSAGE + " VARCHAR(256)," + COL_REMINDER_ICON + " BLOB)"
+        val createTable = "CREATE TABLE " + TABLE_NAME + " (" + REMINDER_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," + COL_LOCATION_X + " INTEGER," + COL_LOCATION_Y + " INTEGER," + COL_REMINDER_TIME + " VARCHAR(256)," + COL_CREATION_TIME + " VARCHAR(256)," + COL_CREATOR_ID + " INTEGER," + COL_REMINDER_SEEN + " INTEGER," + COL_MESSAGE + " VARCHAR(256)," + COL_REMINDER_ICON + " BLOB)"
         db?.execSQL(createTable)
     }
 
@@ -48,7 +49,7 @@ class DatabaseHandler(var context: Context) : SQLiteOpenHelper(context,DATABASE_
         if(result == (-1).toLong()) {
             Toast.makeText(context, "Failed to Save Reminder", Toast.LENGTH_SHORT).show()
         } else {
-            Toast.makeText(context, "Reminder Saved", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "REMINDER CREATED", Toast.LENGTH_SHORT).show()
         }
         db.close()
     }
@@ -61,9 +62,10 @@ class DatabaseHandler(var context: Context) : SQLiteOpenHelper(context,DATABASE_
         val result = db.rawQuery(query, null)
         if (result.moveToFirst()) {
             do {
-                val reminder = Reminder(0, "",0,0,0,0,0, 0,"")
+                val reminder = Reminder(0, "",0,0,"","",0, 0,"")
                 reminder.id = result.getString(result.getColumnIndex(REMINDER_ID)).toInt()
                 reminder.message = result.getString(result.getColumnIndex(COL_MESSAGE))
+                reminder.reminder_time = result.getString(result.getColumnIndex(COL_REMINDER_TIME))
                 reminder.reminder_icon = result.getString(result.getColumnIndex(COL_REMINDER_ICON))
                 list.add(reminder)
             } while (result.moveToNext())

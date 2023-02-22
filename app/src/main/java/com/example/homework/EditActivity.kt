@@ -7,9 +7,13 @@ import android.util.Log
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.workDataOf
 import com.google.android.material.button.MaterialButton
 import java.io.File
 import java.util.*
+import java.util.concurrent.TimeUnit
 import kotlin.properties.Delegates
 
 
@@ -41,7 +45,7 @@ class EditActivity : AppCompatActivity() {
             imagePicker()
         }
 
-        var reminder = Reminder(0, "",0, 0, 0, 0, 0, 0, "")
+        var reminder = Reminder(0, "",0, 0, "", "", 0, 0, "")
 
         val extras = intent.extras
         if (extras != null) {
@@ -64,7 +68,7 @@ class EditActivity : AppCompatActivity() {
             creator_icon = extras.getString("reminder_icon").toString()
             imgView.setImageURI(Uri.parse(creator_icon))
             message.setText(message2.toString(), TextView.BufferType.EDITABLE)
-            val reminder2 = Reminder(id, message2, location_x, location_y, reminder_time, creation_time, creator_id, reminder_seen, creator_icon)
+            val reminder2 = Reminder(id, message2, location_x, location_y, reminder_time.toString(), creation_time.toString(), creator_id, reminder_seen, creator_icon)
             reminder = reminder2
             val db: DatabaseHandler = DatabaseHandler(this)
         }
@@ -74,9 +78,9 @@ class EditActivity : AppCompatActivity() {
 
         createButton.setOnClickListener {
             reminder.message = message.text.toString()
-            calendar.set(Calendar.HOUR, timePicker.getCurrentHour())
+            calendar.set(Calendar.HOUR_OF_DAY, timePicker.getCurrentHour())
             calendar.set(Calendar.MINUTE, timePicker.getCurrentMinute())
-            reminder.reminder_time = calendar.getTimeInMillis()
+            reminder.reminder_time = calendar.getTimeInMillis().toString()
             if (imageChanged) {
                 reminder.reminder_icon = imageUri.toString()
             }
@@ -84,6 +88,22 @@ class EditActivity : AppCompatActivity() {
             var context = this
             var db = DatabaseHandler(context)
             db.updateData(reminder)
+
+            val time = Calendar.getInstance()
+            val timeDiff = (calendar.timeInMillis/1000L)-(time.timeInMillis/1000L)
+            if (timeDiff > 0) {
+                reminder.creation_time = time.timeInMillis.toString()
+                Log.v("Time difference", timeDiff.toString())
+                val myWorkRequest = OneTimeWorkRequestBuilder<NotificationWorker>()
+                    .setInitialDelay(timeDiff, TimeUnit.SECONDS)
+                    .setInputData(
+                        workDataOf(
+                            "title" to "Reminder",
+                            "message" to message.text.toString()
+                        )
+                    ).build()
+                WorkManager.getInstance(it.context).enqueue(myWorkRequest)
+            }
 
             Toast.makeText(this, "REMINDER UPDATED", Toast.LENGTH_SHORT).show()
             switchActivities()

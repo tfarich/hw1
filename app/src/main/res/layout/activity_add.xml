@@ -68,11 +68,19 @@
         android:timePickerMode="spinner"
         />
 
+    <CheckBox
+        android:id="@+id/checkBox"
+        android:layout_below="@id/timePicker"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:text="Notify me"/>
+
     <com.google.android.material.button.MaterialButton
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/locationbtn"
-        android:layout_below="@id/timePicker"
+        android:layout_below="@id/checkBox"
         android:text="FIND LOCATION"
         android:backgroundTint="#3cd0c4"
         android:layout_centerHorizontal="true"

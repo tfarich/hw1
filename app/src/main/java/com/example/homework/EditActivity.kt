@@ -45,6 +45,13 @@ class EditActivity : AppCompatActivity() {
             imagePicker()
         }
 
+        val simpleCheckBox = findViewById<View>(R.id.checkBox) as CheckBox
+        var checkBoxState = false
+
+        simpleCheckBox.setOnClickListener {
+            checkBoxState = checkBoxState != true
+        }
+
         var reminder = Reminder(0, "",0, 0, "", "", 0, 0, "")
 
         val extras = intent.extras
@@ -87,23 +94,27 @@ class EditActivity : AppCompatActivity() {
 
             var context = this
             var db = DatabaseHandler(context)
-            db.updateData(reminder)
 
-            val time = Calendar.getInstance()
-            val timeDiff = (calendar.timeInMillis/1000L)-(time.timeInMillis/1000L)
-            if (timeDiff > 0) {
-                reminder.creation_time = time.timeInMillis.toString()
-                Log.v("Time difference", timeDiff.toString())
-                val myWorkRequest = OneTimeWorkRequestBuilder<NotificationWorker>()
-                    .setInitialDelay(timeDiff, TimeUnit.SECONDS)
-                    .setInputData(
-                        workDataOf(
-                            "title" to "Reminder",
-                            "message" to message.text.toString()
-                        )
-                    ).build()
-                WorkManager.getInstance(it.context).enqueue(myWorkRequest)
+            if (checkBoxState) {
+                val time = Calendar.getInstance()
+                val timeDiff = (calendar.timeInMillis / 1000L) - (time.timeInMillis / 1000L)
+                if (timeDiff > 0) {
+                    reminder.creation_time = time.timeInMillis.toString()
+                    Log.v("Time difference", timeDiff.toString())
+                    val myWorkRequest = OneTimeWorkRequestBuilder<NotificationWorker>()
+                        .setInitialDelay(timeDiff, TimeUnit.SECONDS)
+                        .setInputData(
+                            workDataOf(
+                                "title" to "Reminder",
+                                "message" to message.text.toString()
+                            )
+                        ).build()
+                    WorkManager.getInstance(it.context).enqueue(myWorkRequest)
+                }
+            } else {
+                reminder.reminder_time = reminder.creation_time
             }
+            db.updateData(reminder)
 
             Toast.makeText(this, "REMINDER UPDATED", Toast.LENGTH_SHORT).show()
             switchActivities()

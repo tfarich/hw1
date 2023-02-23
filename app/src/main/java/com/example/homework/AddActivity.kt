@@ -4,11 +4,11 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.work.*
 import com.google.android.material.button.MaterialButton
-import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -49,6 +49,13 @@ class AddActivity : AppCompatActivity() {
         // create reminder
         val createButton = findViewById<MaterialButton>(R.id.createbtn)
 
+        val simpleCheckBox = findViewById<View>(R.id.checkBox) as CheckBox
+        var checkBoxState = false
+
+        simpleCheckBox.setOnClickListener {
+            checkBoxState = checkBoxState != true
+        }
+
         createButton.setOnClickListener {
             if (message.text.isNullOrEmpty()) {
                 Toast.makeText(this, "MUST ADD MESSAGE", Toast.LENGTH_SHORT).show()
@@ -74,18 +81,22 @@ class AddActivity : AppCompatActivity() {
                     var context = this
                     var db = DatabaseHandler(context)
                     Log.v("THE REMINDER ADDED", reminder.toString())
-                    db.insertData(reminder)
 
-                    val timeDiff = (calendar.timeInMillis/1000L)-(time.timeInMillis/1000L)
-                    //Log.v("Time difference", timeDiff.toString())
-                    val myWorkRequest = OneTimeWorkRequestBuilder<NotificationWorker>()
-                        .setInitialDelay(timeDiff, TimeUnit.SECONDS)
-                        .setInputData(workDataOf(
-                            "title" to "Reminder",
-                            "message" to message.text.toString()
-                        )).build()
-                    //WorkManager.getInstance(requireContext()).enqueue(myWorkRequest)
-                    WorkManager.getInstance(it.context).enqueue(myWorkRequest)
+                    if (checkBoxState) {
+                        val timeDiff = (calendar.timeInMillis/1000L)-(time.timeInMillis/1000L)
+                        //Log.v("Time difference", timeDiff.toString())
+                        val myWorkRequest = OneTimeWorkRequestBuilder<NotificationWorker>()
+                            .setInitialDelay(timeDiff, TimeUnit.SECONDS)
+                            .setInputData(workDataOf(
+                                "title" to "Reminder",
+                                "message" to message.text.toString()
+                            )).build()
+                        //WorkManager.getInstance(requireContext()).enqueue(myWorkRequest)
+                        WorkManager.getInstance(it.context).enqueue(myWorkRequest)
+                    } else {
+                        reminder.reminder_time = reminder.creation_time
+                    }
+                    db.insertData(reminder)
                     switchActivities()
                 } else {
                     Toast.makeText(this, "MUST CHOOSE IMAGE", Toast.LENGTH_SHORT).show()

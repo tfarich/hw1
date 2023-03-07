@@ -56,6 +56,10 @@ class AddActivity : AppCompatActivity() {
             checkBoxState = checkBoxState != true
         }
 
+        locationButton.setOnClickListener {
+            switchToMapActivities()
+        }
+
         createButton.setOnClickListener {
             if (message.text.isNullOrEmpty()) {
                 Toast.makeText(this, "MUST ADD MESSAGE", Toast.LENGTH_SHORT).show()
@@ -133,6 +137,11 @@ class AddActivity : AppCompatActivity() {
 
     private fun switchActivities() {
         val switchActivityIntent = Intent(this, MainActivity::class.java)
+        startActivity(switchActivityIntent)
+    }
+
+    private fun switchToMapActivities() {
+        val switchActivityIntent = Intent(this, LocationPicker::class.java)
         startActivity(switchActivityIntent)
     }
 }

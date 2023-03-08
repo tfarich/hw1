@@ -8,7 +8,7 @@ data class Reminder (
     var id: Int,
     var message: String,
     var location_x: Int,
-    val location_y: Int,
+    var location_y: Int,
     var reminder_time: String,
     var creation_time: String,
     val creator_id: Int,

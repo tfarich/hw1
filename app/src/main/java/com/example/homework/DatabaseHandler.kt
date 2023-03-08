@@ -67,6 +67,8 @@ class DatabaseHandler(var context: Context) : SQLiteOpenHelper(context,DATABASE_
                 reminder.message = result.getString(result.getColumnIndex(COL_MESSAGE))
                 reminder.reminder_time = result.getString(result.getColumnIndex(COL_REMINDER_TIME))
                 reminder.reminder_icon = result.getString(result.getColumnIndex(COL_REMINDER_ICON))
+                reminder.location_x = result.getInt(result.getColumnIndex(COL_LOCATION_X))
+                reminder.location_y = result.getInt(result.getColumnIndex(COL_LOCATION_Y))
                 list.add(reminder)
             } while (result.moveToNext())
         }

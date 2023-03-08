@@ -51,6 +51,7 @@
         <activity android:name=".AddActivity"></activity>
         <activity android:name=".EditActivity"></activity>
         <activity android:name=".LocationPicker"></activity>
+        <activity android:name=".MainMapActivity"></activity>
     </application>
 
 </manifest>

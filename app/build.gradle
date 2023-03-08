@@ -40,12 +40,16 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion '1.2.0'
     }
+    dataBinding {
+        enabled true
+    }
 
 }
 
 dependencies {
     implementation platform("androidx.compose:compose-bom:2022.12.00")
     implementation 'com.google.android.gms:play-services-maps:18.0.2'
+    implementation 'com.google.android.gms:play-services-location:17.0.0'
     implementation 'com.google.firebase:firebase-database-ktx:20.0.4'
     androidTestImplementation platform("androidx.compose:compose-bom:2022.12.00")
     implementation 'androidx.core:core-ktx:1.7.0'

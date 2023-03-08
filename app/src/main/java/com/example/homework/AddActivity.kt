@@ -2,10 +2,12 @@ package com.example.homework
 
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.*
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.work.*
 import com.google.android.material.button.MaterialButton
@@ -18,11 +20,14 @@ class AddActivity : AppCompatActivity() {
     private lateinit var imageButton: Button
     private lateinit var imageView: ImageView
     private lateinit var imageUri: Uri
+    var latitude = -200.0
+    var longitude = -200.0
 
     companion object {
         val IMAGE_REQUEST_CODE = 100
     }
 
+    @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add)
@@ -58,6 +63,13 @@ class AddActivity : AppCompatActivity() {
 
         locationButton.setOnClickListener {
             switchToMapActivities()
+        }
+
+        val extras = intent.extras
+        if (extras != null) {
+            longitude = extras.getDouble("longitude")
+            latitude = extras.getDouble("latitude")
+            Log.v("After maps","Not empty")
         }
 
         createButton.setOnClickListener {
@@ -100,6 +112,15 @@ class AddActivity : AppCompatActivity() {
                     } else {
                         reminder.reminder_time = reminder.creation_time
                     }
+                    if (longitude > -200.0 && latitude > -200.0) {
+                        reminder.location_x = (longitude * 1000000.0).toInt()
+                        reminder.location_y = (latitude * 1000000.0).toInt()
+                    } else {
+                        reminder.location_x = -200
+                        reminder.location_y = -200
+                    }
+                    //Log.v("longitude before", reminder.location_x.toString())
+                    //Log.v("latitude before", reminder.location_y.toString())
                     db.insertData(reminder)
                     switchActivities()
                 } else {

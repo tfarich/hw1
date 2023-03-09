@@ -38,9 +38,13 @@ import java.io.File
 import java.util.*
 import kotlin.collections.ArrayList
 import androidx.databinding.DataBindingUtil
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.workDataOf
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.model.LatLng
+import java.util.concurrent.TimeUnit
 
 private const val REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE = 33
 private const val REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE = 34
@@ -454,6 +458,14 @@ fun RecyclerViewImpl(context: Context, currentLocation: LatLng) {
             reminderData.add(d)
         } else if (diff <= 500) {
             reminderData.add(d)
+            val myWorkRequest = OneTimeWorkRequestBuilder<NotificationWorker>()
+                .setInputData(
+                    workDataOf(
+                    "title" to "Reminder",
+                    "message" to d.message.toString()
+                )
+                ).build()
+            WorkManager.getInstance(context).enqueue(myWorkRequest)
         }
     }
     if (reminderData.isEmpty()) {

@@ -7,8 +7,10 @@ import android.content.Intent
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Environment
 import android.provider.MediaStore
 import android.view.View
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -37,19 +39,83 @@ import com.google.android.material.button.MaterialButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.layout.ContentScale
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.MultiplePermissionsReport
 import com.karumi.dexter.PermissionToken
 import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.*
 
 class ProfileActivity : AppCompatActivity() {
 
-    private val CAMERA_REQUEST_CODE = 1
-    @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
+    //private val CAMERA_REQUEST_CODE = 1
+
+    //@SuppressLint("UnusedMaterialScaffoldPaddingParameter")
+    private lateinit var photoFile: File
+    lateinit var currentPhotoPath: String
+    private val PICTURE_FROM_CAMERA: Int = 1
+    private var picture : ImageView? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent {
+        setContentView(R.layout.activity_profile)
+        val backButton = findViewById<MaterialButton>(R.id.backbtn)
+        backButton.setOnClickListener {
+            switchActivities()
+        }
+        initViews()
+        registerListener()
+    }
+
+    private fun initViews() {
+        picture = findViewById<ImageView>(R.id.preview)
+    }
+
+    private fun registerListener() {
+        picture!!.setOnClickListener {
+            takePicture()
+        }
+    }
+
+    private fun takePicture() {
+        val pictureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        photoFile = createImageFile()
+        val uri = FileProvider.getUriForFile(this, "com.example.homework.fileprovider", photoFile)
+        pictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, uri)
+        startActivityForResult(pictureIntent, PICTURE_FROM_CAMERA)
+    }
+
+    private fun createImageFile(): File {
+        val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
+        val storageDir: File? = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+        return File.createTempFile(
+            "JPEG_",
+        ".jpg",
+            storageDir
+        ).apply {
+            currentPhotoPath = absolutePath
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (resultCode == Activity.RESULT_OK) {
+            if (requestCode == PICTURE_FROM_CAMERA) {
+                val uri = FileProvider.getUriForFile(this, "com.example.homework.fileprovider", photoFile)
+                picture!!.setImageURI(uri)
+            }
+        } else {
+            super.onActivityResult(requestCode, resultCode, data)
+        }
+    }
+
+    private fun switchActivities() {
+        val switchActivityIntent = Intent(this, MainActivity::class.java)
+        startActivity(switchActivityIntent)
+    }
+}
+ /*       setContent {
             val scaffoldState = rememberScaffoldState(
                 rememberDrawerState(DrawerValue.Closed)
             )
@@ -227,4 +293,4 @@ fun BottomBarProfile() {
                 selectedIndex.value == 2
             })
     }
-}
+}*/

@@ -8,7 +8,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.PackageManager
+import android.location.Location
 import android.os.Bundle
+import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -38,6 +40,7 @@ import kotlin.collections.ArrayList
 import androidx.databinding.DataBindingUtil
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
+import com.google.android.gms.maps.model.LatLng
 
 private const val REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE = 33
 private const val REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE = 34
@@ -45,47 +48,118 @@ private const val REQUEST_TURN_DEVICE_LOCATION_ON = 29
 private const val TAG = "MainActivity"
 private const val LOCATION_PERMISSION_INDEX = 0
 private const val BACKGROUND_LOCATION_PERMISSION_INDEX = 1
+
 class MainActivity : ComponentActivity() {
+
+    var currentLongitude = 0.0
+    var currentLatitude = 0.0
 
     private val geofencePendingIntent: PendingIntent by lazy {
         val intent = Intent(this, GeofenceBroadcastReceiver::class.java)
         intent.action = ACTION_GEOFENCE_EVENT
         PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
     }
-    private val runningQOrLater = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q
+    private val runningQOrLater =
+        android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q
     private lateinit var geofencingClient: GeofencingClient
     private lateinit var viewModel: GeofenceViewModel
+
     companion object {
         internal const val ACTION_GEOFENCE_EVENT =
             "HuntMainActivity.treasureHunt.action.ACTION_GEOFENCE_EVENT"
     }
+
     @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         //this.deleteDatabase(DATABASE_NAME)
         super.onCreate(savedInstanceState)
         val geofencingClient = LocationServices.getGeofencingClient(this)
-        setContent {
-            val scaffoldState = rememberScaffoldState(
-                rememberDrawerState(DrawerValue.Closed)
-            )
-            Scaffold(
-                content = {
-                    ComposePlaygroundTheme {
-                        Surface(color = LightBlue) {
-                            RecyclerViewImpl(LocalContext.current)
+        var locationRequest = LocationRequest()
+        locationRequest.interval = 10000
+        locationRequest.fastestInterval = 5000
+        locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        var location = LatLng(0.0, 0.0)
+
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+        }
+        LocationServices.getFusedLocationProviderClient(this@MainActivity)
+            .requestLocationUpdates(locationRequest, object : LocationCallback() {
+                override fun onLocationResult(locationResult: LocationResult?) {
+                    super.onLocationResult(locationResult)
+                    LocationServices.getFusedLocationProviderClient(this@MainActivity)
+                        .removeLocationUpdates(this)
+                    if (locationResult != null && locationResult.locations.size > 0) {
+                        var locIndex = locationResult.locations.size - 1
+                        currentLatitude = locationResult.locations[locIndex].latitude
+                        currentLongitude = locationResult.locations[locIndex].longitude
+                        val currentLocation = LatLng(currentLatitude, currentLongitude)
+                        setContent {
+                            val scaffoldState = rememberScaffoldState(
+                                rememberDrawerState(DrawerValue.Closed)
+                            )
+                            Scaffold(
+                                content = {
+                                    ComposePlaygroundTheme {
+                                        Surface(color = LightBlue) {
+                                            RecyclerViewImpl(LocalContext.current, currentLocation)
+                                        }
+                                    }
+                                },
+                                bottomBar = { BottomBar() }
+                            )
                         }
                     }
-                },
-                bottomBar = { BottomBar() }
-            )
-        }
+                }
+            }, Looper.getMainLooper())
     }
+
+    private fun getCurrentLocation(): LatLng {
+        var locationRequest = LocationRequest()
+        locationRequest.interval = 10000
+        locationRequest.fastestInterval = 5000
+        locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        var location = LatLng(0.0, 0.0)
+
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            return LatLng(0.0, 0.0)
+        }
+        LocationServices.getFusedLocationProviderClient(this@MainActivity)
+            .requestLocationUpdates(locationRequest, object : LocationCallback() {
+                override fun onLocationResult(locationResult: LocationResult?) {
+                    super.onLocationResult(locationResult)
+                    LocationServices.getFusedLocationProviderClient(this@MainActivity)
+                        .removeLocationUpdates(this)
+                    if (locationResult != null && locationResult.locations.size > 0) {
+                        var locIndex = locationResult.locations.size - 1
+                        currentLatitude = locationResult.locations[locIndex].latitude
+                        currentLongitude = locationResult.locations[locIndex].longitude
+                    }
+                }
+            }, Looper.getMainLooper())
+        return location
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_TURN_DEVICE_LOCATION_ON) {
             checkDeviceLocationSettingsAndStartGeofence(false)
         }
     }
+
     private fun removeGeofences() {
         if (!foregroundAndBackgroundLocationPermissionApproved()) {
             return
@@ -103,10 +177,11 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
     private fun addGeofenceForClue() {
         if (viewModel.geofenceIsActive()) return
         val currentGeofenceIndex = viewModel.nextGeofenceIndex()
-        if(currentGeofenceIndex >= GeofencingConstants.NUM_LANDMARKS) {
+        if (currentGeofenceIndex >= GeofencingConstants.NUM_LANDMARKS) {
             removeGeofences()
             viewModel.geofenceActivated()
             return
@@ -115,7 +190,8 @@ class MainActivity : ComponentActivity() {
 
         val geofence = Geofence.Builder()
             .setRequestId(currentGeofenceData.id)
-            .setCircularRegion(currentGeofenceData.latLong.latitude,
+            .setCircularRegion(
+                currentGeofenceData.latLong.latitude,
                 currentGeofenceData.latLong.longitude,
                 GeofencingConstants.GEOFENCE_RADIUS_IN_METERS
             )
@@ -139,15 +215,19 @@ class MainActivity : ComponentActivity() {
                 }
                 geofencingClient.addGeofences(geofencingRequest, geofencePendingIntent)?.run {
                     addOnSuccessListener {
-                        Toast.makeText(this@MainActivity, R.string.geofences_added,
-                            Toast.LENGTH_SHORT)
+                        Toast.makeText(
+                            this@MainActivity, R.string.geofences_added,
+                            Toast.LENGTH_SHORT
+                        )
                             .show()
                         Log.e("Add Geofence", geofence.requestId)
                         viewModel.geofenceActivated()
                     }
                     addOnFailureListener {
-                        Toast.makeText(this@MainActivity, R.string.geofences_not_added,
-                            Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@MainActivity, R.string.geofences_not_added,
+                            Toast.LENGTH_SHORT
+                        ).show()
                         if ((it.message != null)) {
                             Log.w(TAG, it.message.toString())
                         }
@@ -170,15 +250,15 @@ class MainActivity : ComponentActivity() {
             grantResults[LOCATION_PERMISSION_INDEX] == PackageManager.PERMISSION_DENIED ||
             (requestCode == REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE &&
                     grantResults[BACKGROUND_LOCATION_PERMISSION_INDEX] ==
-                    PackageManager.PERMISSION_DENIED))
-        {
+                    PackageManager.PERMISSION_DENIED)
+        ) {
             Toast.makeText(this, "Do not have permissions", Toast.LENGTH_SHORT).show()
         } else {
             checkDeviceLocationSettingsAndStartGeofence()
         }
     }
 
-    private fun checkDeviceLocationSettingsAndStartGeofence(resolve:Boolean = true) {
+    private fun checkDeviceLocationSettingsAndStartGeofence(resolve: Boolean = true) {
         val locationRequest = LocationRequest.create().apply {
             priority = LocationRequest.PRIORITY_LOW_POWER
         }
@@ -187,10 +267,12 @@ class MainActivity : ComponentActivity() {
         val locationSettingsResponseTask =
             settingsClient.checkLocationSettings(builder.build())
         locationSettingsResponseTask.addOnFailureListener { exception ->
-            if (exception is ResolvableApiException && resolve){
+            if (exception is ResolvableApiException && resolve) {
                 try {
-                    exception.startResolutionForResult(this@MainActivity,
-                        REQUEST_TURN_DEVICE_LOCATION_ON)
+                    exception.startResolutionForResult(
+                        this@MainActivity,
+                        REQUEST_TURN_DEVICE_LOCATION_ON
+                    )
                 } catch (sendEx: IntentSender.SendIntentException) {
                     Log.d(TAG, "Error getting location settings resolution: " + sendEx.message)
                 }
@@ -199,17 +281,20 @@ class MainActivity : ComponentActivity() {
             }
         }
         locationSettingsResponseTask.addOnCompleteListener {
-            if ( it.isSuccessful ) {
+            if (it.isSuccessful) {
                 addGeofenceForClue()
             }
         }
     }
+
     @TargetApi(29)
     private fun foregroundAndBackgroundLocationPermissionApproved(): Boolean {
         val foregroundLocationApproved = (
                 PackageManager.PERMISSION_GRANTED ==
-                        ActivityCompat.checkSelfPermission(this,
-                            Manifest.permission.ACCESS_FINE_LOCATION))
+                        ActivityCompat.checkSelfPermission(
+                            this,
+                            Manifest.permission.ACCESS_FINE_LOCATION
+                        ))
         val backgroundPermissionApproved =
             if (runningQOrLater) {
                 PackageManager.PERMISSION_GRANTED ==
@@ -222,7 +307,7 @@ class MainActivity : ComponentActivity() {
         return foregroundLocationApproved && backgroundPermissionApproved
     }
 
-    @TargetApi(29 )
+    @TargetApi(29)
     private fun requestForegroundAndBackgroundLocationPermissions() {
         if (foregroundAndBackgroundLocationPermissionApproved())
             return
@@ -249,7 +334,10 @@ class MainActivity : ComponentActivity() {
 fun BottomBar() {
     val selectedIndex = remember { mutableStateOf(0) }
     val context = LocalContext.current
-    BottomNavigation(backgroundColor = androidx.compose.ui.graphics.Color.White, elevation = 10.dp) {
+    BottomNavigation(
+        backgroundColor = androidx.compose.ui.graphics.Color.White,
+        elevation = 10.dp
+    ) {
 
         BottomNavigationItem(icon = {
             Icon(imageVector = Icons.Default.ArrowBack, "")
@@ -287,7 +375,7 @@ fun BottomBar() {
 }
 
 @Composable
-fun RecyclerViewImpl(context: Context) {
+fun RecyclerViewImpl(context: Context, currentLocation: LatLng) {
     var data: MutableList<Reminder>
     val db: DatabaseHandler = DatabaseHandler(context)
     val context = LocalContext.current
@@ -313,7 +401,7 @@ fun RecyclerViewImpl(context: Context) {
                         Log.v("ID: ", id.toString())
                         val switchActivityIntent = Intent(context, MainActivity::class.java)
                         context.startActivity(switchActivityIntent)
-                }) {
+                    }) {
                     Text(text = "Delete")
                 }
             },
@@ -324,8 +412,8 @@ fun RecyclerViewImpl(context: Context) {
                         contentColor = Color.Black
                     ),
                     onClick = {
-                    dialogOpen = false
-                }) {
+                        dialogOpen = false
+                    }) {
                     Text(text = "Do not Delete")
                 }
             },
@@ -357,16 +445,15 @@ fun RecyclerViewImpl(context: Context) {
         val locationY = d.location_y
         val id = d.id
         Log.v("id", id.toString())
-        val timeDiff = (reminderTime/1000L)-(currentTime/1000L)
-        //Log.v("reminder diff", timeDiff.toString())
-        //Log.v("reminder_time", reminderTime.toString())
-        //Log.v("creation time", currentTime.toString())
-        Log.v("longitude after", locationX.toString())
-        Log.v("latitude after", locationY.toString())
+        val coordinateX = locationX.toDouble() / 1000000.0
+        val coordinateY = locationY.toDouble() / 1000000.0
+        val coordinates = LatLng(coordinateY, coordinateX)
+        val diff = calculateLocationDifference(currentLocation, coordinates)
+        val timeDiff = (reminderTime / 1000L) - (currentTime / 1000L)
         if (timeDiff < 0) {
             reminderData.add(d)
-        //} else if (close by)
-        //    reminderData.add(d)
+        } else if (diff <= 500) {
+            reminderData.add(d)
         }
     }
     if (reminderData.isEmpty()) {
@@ -398,10 +485,10 @@ fun RecyclerViewImpl(context: Context) {
                             AsyncImage(
                                 model = ImageRequest.Builder(LocalContext.current)
                                     .data(it.reminder_icon)
-                                .build(),
-                            contentDescription = "icon",
-                            contentScale = ContentScale.Inside,
-                            modifier = Modifier.size(30.dp)
+                                    .build(),
+                                contentDescription = "icon",
+                                contentScale = ContentScale.Inside,
+                                modifier = Modifier.size(30.dp)
                             )
                             /*val painter = rememberImagePainter(data = File(it.reminder_icon))
                             Image(
@@ -411,8 +498,10 @@ fun RecyclerViewImpl(context: Context) {
                                 painter = painter,
                                 contentDescription = "",
                             )*/
-                            Text(text = it.messageToString(),
-                                modifier = Modifier.padding(8.dp))
+                            Text(
+                                text = it.messageToString(),
+                                modifier = Modifier.padding(8.dp)
+                            )
                             Spacer(Modifier.weight(1f))
                             Button(
                                 border = null,
@@ -423,7 +512,8 @@ fun RecyclerViewImpl(context: Context) {
                                 contentPadding = PaddingValues(0.dp),
                                 modifier = Modifier.size(width = 40.dp, height = 35.dp),
                                 onClick = {
-                                    val switchActivityIntent = Intent(context, EditActivity::class.java)
+                                    val switchActivityIntent =
+                                        Intent(context, EditActivity::class.java)
                                     switchActivityIntent.putExtra("ID", it.id)
                                     switchActivityIntent.putExtra("message", it.message)
                                     switchActivityIntent.putExtra("location_x", it.location_x)
@@ -444,7 +534,7 @@ fun RecyclerViewImpl(context: Context) {
                                     contentColor = Color.Black
                                 ),
                                 contentPadding = PaddingValues(0.dp),
-                                modifier = Modifier.size(width = 40.dp,height = 35.dp),
+                                modifier = Modifier.size(width = 40.dp, height = 35.dp),
                                 onClick = {
                                     dialogOpen = true
                                     id = it.id
@@ -457,4 +547,16 @@ fun RecyclerViewImpl(context: Context) {
             }
         }
     }
+}
+
+fun calculateLocationDifference(lastLocation: LatLng, firstLocation: LatLng): Float {
+    val dist = FloatArray(1)
+    Location.distanceBetween(
+        lastLocation.latitude,
+        lastLocation.longitude,
+        firstLocation.latitude,
+        firstLocation.longitude,
+        dist
+    )
+    return dist[0]
 }

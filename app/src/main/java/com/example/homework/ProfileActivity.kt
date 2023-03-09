@@ -1,10 +1,13 @@
 package com.example.homework
 
+import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.provider.MediaStore
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
@@ -33,8 +36,16 @@ import androidx.compose.ui.unit.dp
 import com.google.android.material.button.MaterialButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.layout.ContentScale
+import androidx.core.content.ContextCompat
+import com.karumi.dexter.Dexter
+import com.karumi.dexter.MultiplePermissionsReport
+import com.karumi.dexter.PermissionToken
+import com.karumi.dexter.listener.PermissionRequest
+import com.karumi.dexter.listener.multi.MultiplePermissionsListener
 
 class ProfileActivity : AppCompatActivity() {
+
+    private val CAMERA_REQUEST_CODE = 1
     @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -1,11 +1,15 @@
 package com.example.homework
 
 import android.Manifest
+import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.provider.MediaStore
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.util.Log
@@ -15,8 +19,12 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.work.*
 import com.google.android.material.button.MaterialButton
+import java.io.File
+import java.io.IOException
+import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -31,6 +39,7 @@ class AddActivity : AppCompatActivity() {
 
     companion object {
         val IMAGE_REQUEST_CODE = 100
+        val REQUEST_IMAGE_CAPTURE = 300
     }
 
     val RECORDAUDIOREQUESTCODE = 1
@@ -93,7 +102,6 @@ class AddActivity : AppCompatActivity() {
 
         imageButton = findViewById<MaterialButton>(R.id.gallerybtn)
         imageView = findViewById<ImageView>(R.id.preview)
-
         imageButton.setOnClickListener {
             imagePicker()
         }
@@ -197,6 +205,8 @@ class AddActivity : AppCompatActivity() {
         startActivityForResult(intent,IMAGE_REQUEST_CODE)
     }
 
+
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == IMAGE_REQUEST_CODE && resultCode == RESULT_OK) {
@@ -223,10 +233,15 @@ class AddActivity : AppCompatActivity() {
                 message.setText(
                     Objects.requireNonNull(res)[0]
                 )
+            } else if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+                val imageBitmap = data?.extras?.get("data") as Bitmap
+                imageView.setImageBitmap(imageBitmap)
+                if (data != null) {
+                    imageUri = data.data!!
+                }
             }
         }
     }
-
     private fun switchActivities() {
         val switchActivityIntent = Intent(this, MainActivity::class.java)
         startActivity(switchActivityIntent)

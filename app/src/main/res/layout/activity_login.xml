@@ -58,15 +58,18 @@
         android:layout_centerInParent="true"/>
 
     <com.google.android.material.button.MaterialButton
-        android:layout_alignRight="@id/dummy"
-        android:layout_height="wrap_content"
-        android:layout_width="wrap_content"
-        android:layout_below="@id/password"
-        android:layout_alignParentLeft="true"
-        android:backgroundTint="@color/black"
         android:id="@+id/loginbtn"
-        android:text="LOGIN"
-        android:layout_margin="7dp"/>
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/password"
+        android:layout_alignRight="@id/dummy"
+        android:layout_alignParentLeft="true"
+        android:layout_marginStart="7dp"
+        android:layout_marginTop="7dp"
+        android:layout_marginEnd="7dp"
+        android:layout_marginBottom="7dp"
+        android:backgroundTint="@color/black"
+        android:text="LOGIN" />
 
     <com.google.android.material.button.MaterialButton
         android:layout_alignLeft="@id/dummy"

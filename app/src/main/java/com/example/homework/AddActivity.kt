@@ -1,14 +1,20 @@
 package com.example.homework
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.speech.RecognizerIntent
+import android.speech.SpeechRecognizer
 import android.util.Log
 import android.view.View
 import android.widget.*
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.work.*
 import com.google.android.material.button.MaterialButton
 import java.util.*
@@ -27,13 +33,63 @@ class AddActivity : AppCompatActivity() {
         val IMAGE_REQUEST_CODE = 100
     }
 
+    val RECORDAUDIOREQUESTCODE = 1
+    private val speechRecognizer: SpeechRecognizer? = null
+    var micButton: ImageView? = null
+    lateinit var message: TextView
+    private val REQUEST_CODE_SPEECH_INPUT = 1
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add)
-        val message = findViewById<TextView>(R.id.message)
+        message = findViewById<TextView>(R.id.message)
         val timePicker = findViewById<TimePicker>(R.id.timePicker)
         val locationButton = findViewById<MaterialButton>(R.id.locationbtn)
+        val micButton = findViewById<MaterialButton>(R.id.micButton)
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) !=
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            checkPermission()
+        }
+
+        micButton.setOnClickListener {
+            // on below line we are calling speech recognizer intent.
+            val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+
+            // on below line we are passing language model
+            // and model free form in our intent
+            intent.putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+            )
+
+            // on below line we are passing our
+            // language as a default language.
+            intent.putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE,
+                Locale.getDefault()
+            )
+
+            // on below line we are specifying a prompt
+            // message as speak to text on below line.
+            intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak to text")
+
+            // on below line we are specifying a try catch block.
+            // in this block we are calling a start activity
+            // for result method and passing our result code.
+            try {
+                startActivityForResult(intent, REQUEST_CODE_SPEECH_INPUT)
+            } catch (e: Exception) {
+                // on below line we are displaying error message in toast
+                Toast
+                    .makeText(
+                        this@AddActivity, " " + e.message,
+                        Toast.LENGTH_SHORT
+                    )
+                    .show()
+            }
+        }
 
         imageButton = findViewById<MaterialButton>(R.id.gallerybtn)
         imageView = findViewById<ImageView>(R.id.preview)
@@ -153,6 +209,21 @@ class AddActivity : AppCompatActivity() {
             imageUri?.let { contentResolver.takePersistableUriPermission(it, takeFlags) }
             //Log.v("alright", imageUri.toString())
             imageView.setImageURI(data?.data)
+        } else if (requestCode == REQUEST_CODE_SPEECH_INPUT) {
+            // on below line we are checking if result code is ok
+            if (resultCode == RESULT_OK && data != null) {
+
+                // in that case we are extracting the
+                // data from our array list
+                val res: ArrayList<String> =
+                    data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS) as ArrayList<String>
+
+                // on below line we are setting data
+                // to our output text view.
+                message.setText(
+                    Objects.requireNonNull(res)[0]
+                )
+            }
         }
     }
 
@@ -164,5 +235,29 @@ class AddActivity : AppCompatActivity() {
     private fun switchToMapActivities() {
         val switchActivityIntent = Intent(this, LocationPicker::class.java)
         startActivity(switchActivityIntent)
+    }
+
+    private fun checkPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            ActivityCompat.requestPermissions(
+                this, arrayOf(Manifest.permission.RECORD_AUDIO),
+                RECORDAUDIOREQUESTCODE
+            )
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String?>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == RECORDAUDIOREQUESTCODE && grantResults.size > 0) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) Toast.makeText(
+                this,
+                "Permission Granted",
+                Toast.LENGTH_LONG
+            ).show()
+        }
     }
 }

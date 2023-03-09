@@ -294,6 +294,9 @@ fun RecyclerViewImpl(context: Context) {
     var dialogOpen by remember { mutableStateOf(false) }
     var id by remember { mutableStateOf(0) }
 
+    // check location
+    // on update, if near any reminders make a notification
+
     if (dialogOpen) {
         AlertDialog(
             onDismissRequest = {

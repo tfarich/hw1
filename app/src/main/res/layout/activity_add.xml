@@ -41,6 +41,17 @@
         android:layout_below="@id/message"
         android:layout_alignParentRight="true"
         android:backgroundTint="#3cd0c4"
+        android:id="@+id/micButton"
+        android:text="Use speech to text"
+        android:layout_margin="7dp"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:layout_alignLeft="@id/message"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:layout_below="@id/micButton"
+        android:layout_alignParentRight="true"
+        android:backgroundTint="#3cd0c4"
         android:id="@+id/gallerybtn"
         android:text="gallery photo"
         android:layout_margin="7dp"/>

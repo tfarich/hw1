@@ -1,11 +1,19 @@
 package com.example.homework
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.location.Geocoder
 import android.os.Bundle
+import android.os.Looper
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.GoogleMap.OnMarkerDragListener
@@ -40,32 +48,62 @@ class LocationPicker : AppCompatActivity(), OnMapReadyCallback {
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
-        val location = LatLng(65.02223468829855, 25.471850778153048)
-        googleMap.addMarker(
-            MarkerOptions()
-                .position(location)
-                .title("Location")
-                .draggable(true)
-        )
-        /*googleMap.addCircle(
-            CircleOptions().center(location).radius(100.0).strokeWidth(3f).strokeColor(Color.RED).fillColor(
-                Color.argb(70, 150, 50, 50))
-        )*/
-        googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 14f))
-        googleMap.setOnMarkerDragListener(object : OnMarkerDragListener {
-            override fun onMarkerDragStart(marker: Marker) {
-                latitude = marker.position.latitude
-                longitude = marker.position.longitude
-            }
-            override fun onMarkerDrag(marker: Marker) {}
-            override fun onMarkerDragEnd(marker: Marker) {
-                latitude = marker.position.latitude
-                longitude = marker.position.longitude
-                Log.v("latitude", latitude.toString())
-                Log.v("longitude", longitude.toString())
-            }
-        })
+        var locationRequest = LocationRequest()
+        locationRequest.interval = 10000
+        locationRequest.fastestInterval = 5000
+        locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        var location = LatLng(0.0, 0.0)
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+        }
+        LocationServices.getFusedLocationProviderClient(this@LocationPicker)
+            .requestLocationUpdates(locationRequest, object : LocationCallback() {
+                override fun onLocationResult(locationResult: LocationResult?) {
+                    super.onLocationResult(locationResult)
+                    LocationServices.getFusedLocationProviderClient(this@LocationPicker)
+                        .removeLocationUpdates(this)
+                    if (locationResult != null && locationResult.locations.size > 0) {
+                        var locIndex = locationResult.locations.size - 1
+                        latitude = locationResult.locations[locIndex].latitude
+                        longitude = locationResult.locations[locIndex].longitude
+
+                        val location = LatLng(latitude, longitude)
+                        googleMap.addMarker(
+                            MarkerOptions()
+                                .position(location)
+                                .title("Location")
+                                .draggable(true)
+                        )
+                        /*googleMap.addCircle(
+                            CircleOptions().center(location).radius(100.0).strokeWidth(3f).strokeColor(Color.RED).fillColor(
+                                Color.argb(70, 150, 50, 50))
+                        )*/
+                        googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 14f))
+                        googleMap.setOnMarkerDragListener(object : OnMarkerDragListener {
+                            override fun onMarkerDragStart(marker: Marker) {
+                                latitude = marker.position.latitude
+                                longitude = marker.position.longitude
+                            }
+
+                            override fun onMarkerDrag(marker: Marker) {}
+                            override fun onMarkerDragEnd(marker: Marker) {
+                                latitude = marker.position.latitude
+                                longitude = marker.position.longitude
+                                Log.v("latitude", latitude.toString())
+                                Log.v("longitude", longitude.toString())
+                            }
+                        })
+                    }
+                }
+            }, Looper.getMainLooper())
     }
+
     private fun switchActivities() {
         val switchActivityIntent = Intent(this, AddActivity::class.java)
         switchActivityIntent.putExtra("latitude", latitude)
